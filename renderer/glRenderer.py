@@ -141,7 +141,7 @@ class glRenderer:
             self.height = new_height
             glutReshapeWindow(self.width, self.height)
 
-        # Neet to refresh opengl to apply resizing (the number of required iterations is a bit random)
+        # Need to refresh opengl to apply resizing (the number of required iterations is a bit random)
         # glutPostRedisplay()
         glutMainLoopEvent()
         iterNum = 0
@@ -156,7 +156,7 @@ class glRenderer:
             glutMainLoopEvent()
             iterNum += 1
             if iterNum > 20:
-                print("Wraning: Cannot resize the gl window")
+                print("Warning: Cannot resize the gl window")
                 break
 
         # print("{} refreshing is done to resize window".format(iterNum))

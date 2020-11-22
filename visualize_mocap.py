@@ -199,14 +199,11 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 
         # visualization
-        res_img = visualizer.visualize(
+        visualizer.visualize(
             img_original_bgr,
             pred_mesh_list=pred_mesh_list,
             body_bbox_list=body_bbox_list,
             hand_bbox_list=hand_bbox_list)
-
-        # save result image
-        demo_utils.save_res_img(args.out_dir, image_path, res_img)
 
         # save predictions to pkl
         if args.save_pred_pkl:
