@@ -1,3 +1,13 @@
+# Output folders
+mocap_output/
+visualization_out/
+
+# Data folders
+extra_data/
+
+# Pycharm
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
