@@ -1,4 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+import threading
+from tkinter import ttk
 
 import cv2
 import smplx
@@ -11,6 +13,10 @@ from conversion_utils import convert_smpl_to_bbox, convert_bbox_to_oriIm
 from hand_module import extract_hand_output
 from models import SMPL, SMPLX
 from renderer.visualizer import Visualizer
+from renderer.glViewer import backwardsDirection as goBackwards
+
+import tkinter as tk
+from tkinter.font import Font
 
 
 def __get_data_type(pkl_files):
@@ -167,8 +173,11 @@ def __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list):
 
 
 def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
-    for pkl_file in pkl_files:
+    length = len(pkl_files)
+    i = 0
+    while i < length:
         # load data
+        pkl_file = pkl_files[i]
         saved_data = gnu.load_pkl(pkl_file)
 
         image_path = saved_data['image_path']
@@ -205,11 +214,125 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
             body_bbox_list=body_bbox_list,
             hand_bbox_list=hand_bbox_list)
 
+        if goBackwards():
+            if i > 0:
+                i -= 1
+        else:
+            i += 1
+
         # save predictions to pkl
         if args.save_pred_pkl:
             args.use_smplx = smpl_type == 'smplx'
             demo_utils.save_pred_to_pkl(
                 args, demo_type, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
+
+
+def reset():
+    print('reset')
+
+
+class ParametersWindow(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        self.root = tk.Tk()
+
+        joints = {
+            "arm": [1, 2, 3],
+            "leg": [4, 5, 6]
+        }
+
+        jointVar = tk.StringVar(self.root)
+        varX = tk.DoubleVar(self.root)
+        varY = tk.DoubleVar(self.root)
+        varZ = tk.DoubleVar(self.root)
+
+        jointStrings = list(joints.keys())
+        jointVar.set(jointStrings[0])
+
+        def setXYZ(value):
+            varX.set(joints[value][0])
+            varY.set(joints[value][1])
+            varZ.set(joints[value][2])
+
+        setXYZ(jointVar.get())
+
+        frame0 = tk.Frame(self.root)
+        frame0.pack(anchor=tk.W)
+
+        textJoint = tk.Label(frame0, text='Joint:', font=Font(family='Helvetica', size=24))
+        textJoint.pack(side=tk.LEFT)
+
+        jointDropdown = tk.OptionMenu(frame0, jointVar, *jointStrings, command=setXYZ)
+        jointDropdown.pack(side=tk.LEFT)
+
+        separator0 = ttk.Separator(self.root, orient='horizontal')
+        separator0.pack(fill=tk.X)
+
+        textX = tk.Label(self.root, text='X parameter', font=Font(family='Helvetica', size=24))
+        textX.pack(anchor=tk.W)
+
+        frameX = tk.Frame(self.root)
+        frameX.pack(anchor=tk.W)
+
+        boxX = tk.Spinbox(frameX, from_=-30000000, to=30000000, textvariable=varX,
+                          font=Font(family='Helvetica', size=16))
+        boxX.pack(side=tk.LEFT)
+
+        resetX = tk.Button(frameX,
+                           text="RESET",
+                           command=reset)
+        resetX.pack(side=tk.LEFT)
+
+        sliderX = tk.Scale(self.root, from_=-30000000, to=30000000, length=900, variable=varX, orient=tk.HORIZONTAL)
+        sliderX.pack()
+
+        separator1 = ttk.Separator(self.root, orient='horizontal')
+        separator1.pack(fill=tk.X)
+
+        textY = tk.Label(self.root, text='Y parameter', font=Font(family='Helvetica', size=24))
+        textY.pack(anchor=tk.W)
+
+        frameY = tk.Frame(self.root)
+        frameY.pack(anchor=tk.W)
+
+        boxY = tk.Spinbox(frameY, from_=-30000000, to=30000000, textvariable=varY,
+                          font=Font(family='Helvetica', size=16))
+        boxY.pack(side=tk.LEFT)
+
+        resetY = tk.Button(frameY,
+                           text="RESET",
+                           command=reset)
+        resetY.pack(side=tk.LEFT)
+
+        sliderY = tk.Scale(self.root, from_=-30000000, to=30000000, length=900, variable=varY, orient=tk.HORIZONTAL)
+        sliderY.pack()
+
+        separator2 = ttk.Separator(self.root, orient='horizontal')
+        separator2.pack(fill=tk.X)
+
+        textZ = tk.Label(self.root, text='Z parameter', font=Font(family='Helvetica', size=24))
+        textZ.pack(anchor=tk.W)
+
+        frameZ = tk.Frame(self.root)
+        frameZ.pack(anchor=tk.W)
+
+        boxZ = tk.Spinbox(frameZ, from_=-30000000, to=30000000, textvariable=varZ,
+                          font=Font(family='Helvetica', size=16))
+        boxZ.pack(side=tk.LEFT)
+
+        resetZ = tk.Button(frameZ,
+                           text="RESET",
+                           command=reset)
+        resetZ.pack(side=tk.LEFT)
+
+        sliderZ = tk.Scale(self.root, from_=-30000000, to=30000000, length=900, variable=varZ, orient=tk.HORIZONTAL)
+        sliderZ.pack()
+
+        self.root.mainloop()
 
 
 def main():
@@ -226,6 +349,9 @@ def main():
 
     # Set Visualizer
     visualizer = Visualizer('opengl_gui')
+
+    # trackbars for parameter adjustment
+    ParametersWindow()
 
     # load smpl model
     visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer)

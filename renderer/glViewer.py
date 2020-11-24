@@ -142,6 +142,8 @@ g_rotateInterval = 2
 g_bShowSkeleton = True
 g_bShowMesh = True
 
+g_backwardsDirection = False
+
 ########################################################
 # 3D keypoints Visualization Setting
 g_skeletons = None  # list of np.array. skeNum x  (skelDim, skelFrames)
@@ -1041,14 +1043,23 @@ def specialkeys(key, x, y):
     global g_xrot
     global g_yrot
     global g_cur_ind
+    global g_stopMainLoop
+    global g_backwardsDirection
     if key == GLUT_KEY_UP:
         g_xrot -= 2.0
     if key == GLUT_KEY_DOWN:
         g_xrot += 2.0
     if key == GLUT_KEY_RIGHT:
-        global g_stopMainLoop
         g_stopMainLoop = True
+        g_backwardsDirection = False
+    if key == GLUT_KEY_LEFT:
+        g_stopMainLoop = True
+        g_backwardsDirection = True
     glutPostRedisplay()
+
+
+def backwardsDirection():
+    return g_backwardsDirection
 
 
 def init_gl_util():
