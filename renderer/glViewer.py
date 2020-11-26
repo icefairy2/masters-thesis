@@ -355,62 +355,6 @@ def setFree3DView():
     glTranslatef(0.0, 0, g_zTrans)
 
 
-# g_hdCams = None
-# def load_panoptic_cameras():
-#     global g_hdCams
-#     with open('/media/posefs3b/Users/xiu/domedb/171204_pose3/calibration_171204_pose3.json') as f:
-#         rawCalibs = json.load(f)
-#     cameras = rawCalibs['cameras']
-#     allPanel = map(lambda x:x['panel'],cameras)
-#     hdCamIndices = [i for i,x in enumerate(allPanel) if x==0]
-#     g_hdCams = [cameras[i] for i in hdCamIndices]
-
-# def setPanopticCameraView(camid):
-#     if g_hdCams==None:
-#         load_cameras()
-
-#     if camid>=len(g_hdCams):
-#         camid = 0
-#     cam = g_hdCams[camid]
-#     invR = np.array(cam['R'])
-#     invT = np.array(cam['t'])
-#     camMatrix = np.hstack((invR, invT))
-#     # denotes camera matrix, [R|t]
-#     camMatrix = np.vstack((camMatrix, [0, 0, 0, 1]))
-#     #camMatrix = numpy.linalg.inv(camMatrix)
-#     K = np.array(cam['K'])
-#     #K = K.flatten()
-#     glMatrixMode(GL_PROJECTION)
-#     glLoadIdentity()
-#     Kscale = 1920.0/g_Width
-#     K = K/Kscale
-#     ProjM = np.zeros((4,4))
-#     ProjM[0,0] = 2*K[0,0]/g_Width
-#     ProjM[0,2] = (g_Width - 2*K[0,2])/g_Width
-#     ProjM[1,1] = 2*K[1,1]/g_Height
-#     ProjM[1,2] = (-g_Height+2*K[1,2])/g_Height
-
-#     ProjM[2,2] = (-g_farPlane-g_nearPlane)/(g_farPlane-g_nearPlane)
-#     ProjM[2,3] = -2*g_farPlane*g_nearPlane/(g_farPlane-g_nearPlane)
-#     ProjM[3,2] = -1
-
-#     glLoadMatrixd(ProjM.T)
-#     glMatrixMode(GL_MODELVIEW)
-#     glLoadIdentity()
-#     gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0)
-#     glMultMatrixd(camMatrix.T)
-
-
-# def load_MTC_default_camera():
-#     global g_Width,  g_Height
-
-#     camRender_width = 1920
-#     camRender_height = 1080
-
-#     g_Width = camRender_width
-#     g_Height = camRender_height
-
-
 # 3x3 intrinsic camera matrix
 def setCamView_K(K):
     global g_camView_K
@@ -1101,7 +1045,7 @@ def init_gl_util():
         # glutReshapeWindow(int(g_Width*0.5), int(g_Height*0.5))     #Just doing resize
 
 
-def init_gl(maxIter=-10):
+def init_gl(maxIter=-10, refresh_mesh=None):
     # Init_Haggling()
     # global width
     # global height
@@ -1115,6 +1059,8 @@ def init_gl(maxIter=-10):
         if bool(glutMainLoopEvent) == False:
             continue
         glutMainLoopEvent()
+        if refresh_mesh is not None:
+            refresh_mesh()
         if g_stopMainLoop:
             break
         if maxIter > 0:
@@ -3297,5 +3243,5 @@ def setNearPlane(p):
 
 
 # Aliasing since the "init_gl" is a bit ugly name
-def show(maxIter=-10):
-    init_gl(maxIter)
+def show(maxIter=-10, refresh_mesh=None):
+    init_gl(maxIter, refresh_mesh)

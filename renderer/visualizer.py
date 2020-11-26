@@ -8,7 +8,6 @@ Visualizing 3D humans via Opengl
 """
 
 from renderer import glViewer
-from renderer import meshRenderer  # glRenderer
 from renderer import viewer2D  # , glViewer, glRenderer
 from renderer.image_utils import draw_raw_bbox, draw_hand_bbox, draw_body_bbox, draw_arm_pose
 
@@ -50,6 +49,7 @@ class Visualizer(object):
                   pred_mesh_list=None,
                   vis_raw_hand_bbox=True,
                   vis_body_pose=True,
+                  refresh_mesh=None
                   ):
         # init
         res_img = input_img.copy()
@@ -74,28 +74,23 @@ class Visualizer(object):
 
         # render predicted meshes
         if pred_mesh_list is not None:
-            self.__render_pred_verts(input_img, pred_mesh_list)
+            img = input_img.copy()
+            pred_mesh_list_offset = []
+            for mesh in pred_mesh_list:
+                # Mesh vertices have in image coordinate (left, top origin)
+                # Move the X-Y origin in image center
+                mesh_offset = mesh['vertices'].copy()
+                mesh_offset[:, 0] -= input_img.shape[1] * 0.5
+                mesh_offset[:, 1] -= input_img.shape[0] * 0.5
+                pred_mesh_list_offset.append({'ver': mesh_offset, 'f': mesh['faces']})  # verts = mesh['vertices']
+                # faces = mesh['faces']
+            if self.rendererType == "opengl_gui":
+                self._visualize_gui_naive(pred_mesh_list_offset, img_original=img, refresh_mesh=refresh_mesh)
 
         return res_img
 
-    def __render_pred_verts(self, img_original, pred_mesh_list):
-
-        res_img = img_original.copy()
-
-        pred_mesh_list_offset = []
-        for mesh in pred_mesh_list:
-            # Mesh vertices have in image coordinate (left, top origin)
-            # Move the X-Y origin in image center
-            mesh_offset = mesh['vertices'].copy()
-            mesh_offset[:, 0] -= img_original.shape[1] * 0.5
-            mesh_offset[:, 1] -= img_original.shape[0] * 0.5
-            pred_mesh_list_offset.append({'ver': mesh_offset, 'f': mesh['faces']})  # verts = mesh['vertices']
-            # faces = mesh['faces']
-        if self.rendererType == "opengl_gui":
-            self._visualize_gui_naive(pred_mesh_list_offset, img_original=res_img)
-
     def _visualize_gui_naive(self, meshList, skelList=None, body_bbox_list=None, img_original=None,
-                             normal_compute=True):
+                             normal_compute=True, refresh_mesh=None):
         """
             args:
                 meshList: list of {'ver': pred_vertices, 'f': smpl.faces}
@@ -121,4 +116,19 @@ class Visualizer(object):
         glViewer.setNearPlane(50)
         glViewer.setWindowSize(img_original.shape[1], img_original.shape[0])
         # glViewer.show_SMPL(bSaveToFile = True, bResetSaveImgCnt = False, countImg = False, mode = 'camera')
-        glViewer.show(100000)
+        glViewer.show(100000, refresh_mesh)
+
+    def update_mesh(self, pred_mesh_list, input_img):
+        if pred_mesh_list is not None:
+            pred_mesh_list_offset = []
+            for mesh in pred_mesh_list:
+                # Mesh vertices have in image coordinate (left, top origin)
+                # Move the X-Y origin in image center
+                mesh_offset = mesh['vertices'].copy()
+                mesh_offset[:, 0] -= input_img.shape[1] * 0.5
+                mesh_offset[:, 1] -= input_img.shape[0] * 0.5
+                pred_mesh_list_offset.append({'ver': mesh_offset, 'f': mesh['faces']})  # verts = mesh['vertices']
+                # faces = mesh['faces']
+            if self.rendererType == "opengl_gui":
+                glViewer.setMeshData(pred_mesh_list_offset,
+                                     bComputeNormal=True)  # meshes = {'ver': pred_vertices, 'f': smplWrapper.f}

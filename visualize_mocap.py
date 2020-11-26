@@ -205,20 +205,25 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         body_bbox_list = saved_data['body_bbox_list']
         pred_output_list = saved_data['pred_output_list']
 
-        if not saved_data['save_mesh']:
-            __calc_mesh(
-                demo_type, smpl_type, smpl_model, pred_output_list)
-        else:
-            pass
-
+        __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
+
+        def refresh_mesh():
+            global paramsWin
+            if paramsWin is not None:
+                parameters = paramsWin.get_params()
+                pred_output_list[0]['pred_body_pose'] = parameters
+            __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
+            pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
+            visualizer.update_mesh(pred_mesh_list, img_original_bgr)
 
         # visualization
         visualizer.visualize(
             img_original_bgr,
             pred_mesh_list=pred_mesh_list,
             body_bbox_list=body_bbox_list,
-            hand_bbox_list=hand_bbox_list)
+            hand_bbox_list=hand_bbox_list,
+            refresh_mesh=refresh_mesh)
 
         if goBackwards():
             if i > 0:

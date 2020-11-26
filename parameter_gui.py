@@ -11,10 +11,14 @@ from constants import JOINT_NAMES, JOINT_IDS
 class ParametersWindow(threading.Thread):
 
     def __init__(self, parameters):
-        self.params = np.degrees(np.reshape(parameters, (-1, 3)))
         threading.Thread.__init__(self)
+        self.params = np.degrees(np.reshape(parameters, (-1, 3)))
         self._callbacks = []
         self.start()
+
+    def get_params(self):
+        reformatted_params = np.radians(np.reshape(self.params, (1, -1)))
+        return reformatted_params
 
     def set_params(self, parameters):
         self.params = np.degrees(np.reshape(parameters, (-1, 3)))
@@ -25,9 +29,9 @@ class ParametersWindow(threading.Thread):
         self.root = tk.Tk()
 
         def stop(event):
-            self.root.destroy()
+            self.root.quit()
 
-        self.root.bind('<Escape>', stop)
+        # self.root.bind('<Escape>', stop)
 
         jointVar = tk.StringVar(self.root)
         varX = tk.DoubleVar(self.root)
@@ -49,6 +53,15 @@ class ParametersWindow(threading.Thread):
 
         def resetZ():
             varZ.set(self.params[JOINT_IDS[jointVar.get()]][2])
+
+        def setX(value):
+            self.params[JOINT_IDS[jointVar.get()]][0] = value
+
+        def setY(value):
+            self.params[JOINT_IDS[jointVar.get()]][1] = value
+
+        def setZ(value):
+            self.params[JOINT_IDS[jointVar.get()]][2] = value
 
         self._callbacks.append(resetX)
         self._callbacks.append(resetY)
@@ -81,7 +94,7 @@ class ParametersWindow(threading.Thread):
         resetX = tk.Button(frameX, text="RESET", command=resetX)
         resetX.pack(side=tk.LEFT)
 
-        sliderX = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varX, orient=tk.HORIZONTAL)
+        sliderX = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varX, orient=tk.HORIZONTAL, command=setX)
         sliderX.pack()
 
         separator1 = ttk.Separator(self.root, orient='horizontal')
@@ -100,7 +113,7 @@ class ParametersWindow(threading.Thread):
         resetY = tk.Button(frameY, text="RESET", command=resetY)
         resetY.pack(side=tk.LEFT)
 
-        sliderY = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varY, orient=tk.HORIZONTAL)
+        sliderY = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varY, orient=tk.HORIZONTAL, command=setY)
         sliderY.pack()
 
         separator2 = ttk.Separator(self.root, orient='horizontal')
@@ -119,7 +132,7 @@ class ParametersWindow(threading.Thread):
         resetZ = tk.Button(frameZ, text="RESET", command=resetZ)
         resetZ.pack(side=tk.LEFT)
 
-        sliderZ = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varZ, orient=tk.HORIZONTAL)
+        sliderZ = tk.Scale(self.root, from_=-180, to=180, length=500, variable=varZ, orient=tk.HORIZONTAL, command=setZ)
         sliderZ.pack()
 
         self.root.mainloop()
