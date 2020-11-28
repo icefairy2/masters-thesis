@@ -5,7 +5,7 @@ from tkinter.font import Font
 
 import numpy as np
 
-from constants import JOINT_NAMES, JOINT_IDS
+from constants import JOINT_NAMES_DISPLAY, JOINT_IDS_DISPLAY
 
 
 class ParametersWindow(threading.Thread):
@@ -38,30 +38,30 @@ class ParametersWindow(threading.Thread):
         varY = tk.DoubleVar(self.root)
         varZ = tk.DoubleVar(self.root)
 
-        jointVar.set(JOINT_NAMES[0])
+        jointVar.set(JOINT_NAMES_DISPLAY[0])
 
         def setXYZ(value):
-            varX.set(self.params[JOINT_IDS[value]][0])
-            varY.set(self.params[JOINT_IDS[value]][1])
-            varZ.set(self.params[JOINT_IDS[value]][2])
+            varX.set(self.params[JOINT_IDS_DISPLAY[value]][0])
+            varY.set(self.params[JOINT_IDS_DISPLAY[value]][1])
+            varZ.set(self.params[JOINT_IDS_DISPLAY[value]][2])
 
         def resetX():
-            varX.set(self.params[JOINT_IDS[jointVar.get()]][0])
+            varX.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][0])
 
         def resetY():
-            varY.set(self.params[JOINT_IDS[jointVar.get()]][1])
+            varY.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][1])
 
         def resetZ():
-            varZ.set(self.params[JOINT_IDS[jointVar.get()]][2])
+            varZ.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][2])
 
         def setX(value):
-            self.params[JOINT_IDS[jointVar.get()]][0] = value
+            self.params[JOINT_IDS_DISPLAY[jointVar.get()]][0] = value
 
         def setY(value):
-            self.params[JOINT_IDS[jointVar.get()]][1] = value
+            self.params[JOINT_IDS_DISPLAY[jointVar.get()]][1] = value
 
         def setZ(value):
-            self.params[JOINT_IDS[jointVar.get()]][2] = value
+            self.params[JOINT_IDS_DISPLAY[jointVar.get()]][2] = value
 
         self._callbacks.append(resetX)
         self._callbacks.append(resetY)
@@ -75,7 +75,7 @@ class ParametersWindow(threading.Thread):
         textJoint = tk.Label(frame0, text='Joint:', font=Font(family='Helvetica', size=24))
         textJoint.pack(side=tk.LEFT)
 
-        jointDropdown = tk.OptionMenu(frame0, jointVar, *JOINT_NAMES, command=setXYZ)
+        jointDropdown = tk.OptionMenu(frame0, jointVar, *JOINT_NAMES_DISPLAY, command=setXYZ)
         jointDropdown.pack(side=tk.LEFT)
 
         separator0 = ttk.Separator(self.root, orient='horizontal')
