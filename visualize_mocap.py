@@ -288,7 +288,7 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
             visualizer.update_mesh(pred_mesh_list_update, img_original_bgr)
 
         # visualization
-        visualizer.visualize(
+        res_image = visualizer.visualize(
             img_original_bgr,
             pred_mesh_list=pred_mesh_list,
             body_bbox_list=body_bbox_list,
@@ -306,6 +306,12 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
             args.use_smplx = smpl_type == 'smplx'
             demo_utils.save_pred_to_pkl(
                 args, demo_type, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
+
+            # save the obtained video frames
+        if args.out_dir is not None:
+            demo_utils.save_res_img(args.out_dir, image_path, res_image)
+
+    demo_utils.gen_video_out(args.out_dir, 'result_video')
 
 
 def main():

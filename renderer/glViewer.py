@@ -48,10 +48,9 @@ g_xMousePtStart = g_yMousePtStart = 0.
 g_xTrans = 0.
 g_yTrans = 0.
 g_zTrans = 0.
-# g_zoom = 378
-g_zoom = 600.
-g_xRotate = 59.
-g_yRotate = -41.
+g_zoom = 900.
+g_xRotate = 0.
+g_yRotate = 0.
 g_zRotate = 0.
 g_xrot = 0.0
 g_yrot = 0.0
@@ -1051,6 +1050,7 @@ def init_gl(maxIter=-10, refresh_mesh=None):
     # global height
     # Setup for double-buffered display and depth testing
     init_gl_util()
+    glutShowWindow()
 
     global g_stopMainLoop
     g_stopMainLoop = False
@@ -1067,6 +1067,24 @@ def init_gl(maxIter=-10, refresh_mesh=None):
             maxIter -= 1
             if maxIter <= 0:
                 g_stopMainLoop = True
+
+    glutHideWindow()
+
+    global g_zoom, g_xRotate, g_yRotate, g_zRotate, g_xTrans, g_yTrans, g_zTrans
+    backup = g_zoom, g_xRotate, g_yRotate, g_zRotate, g_xTrans, g_yTrans, g_zTrans
+    g_zoom = 807.
+    g_xRotate = 0.
+    g_yRotate = 0.
+    g_zRotate = 0.
+    g_xTrans = 0.
+    g_yTrans = 0.
+    g_zTrans = 0.
+    glPixelStorei(GL_PACK_ALIGNMENT, 1)
+    data = glReadPixels(0, 0, g_Width, g_Height, GL_RGBA, GL_UNSIGNED_BYTE)
+    image = Image.frombytes("RGBA", (g_Width, g_Height), data)
+    image = ImageOps.flip(image)  # in my case image is flipped top-bottom for some reason
+    g_zoom, g_xRotate, g_yRotate, g_zRotate, g_xTrans, g_yTrans, g_zTrans = backup
+    return image
 
     # print("Escaped glut loop")
 
@@ -3244,4 +3262,4 @@ def setNearPlane(p):
 
 # Aliasing since the "init_gl" is a bit ugly name
 def show(maxIter=-10, refresh_mesh=None):
-    init_gl(maxIter, refresh_mesh)
+    return init_gl(maxIter, refresh_mesh)

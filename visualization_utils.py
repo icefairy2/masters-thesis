@@ -293,10 +293,11 @@ def save_pred_to_pkl(
 def save_res_img(out_dir, image_path, res_img):
     out_dir = osp.join(out_dir, "rendered")
     img_name = osp.basename(image_path)
-    img_name = img_name[:-4] + '.jpg'  # Always save as jpg
+    img_name = img_name[:-4] + '.png'
     res_img_path = osp.join(out_dir, img_name)
     gnu.make_subdir(res_img_path)
-    cv2.imwrite(res_img_path, res_img)
+    # cv2.imwrite(res_img_path, res_img)
+    res_img.save(res_img_path, 'PNG')
     print(f"Visualization saved: {res_img_path}")
 
 
@@ -306,7 +307,7 @@ def gen_video_out(out_dir, seq_name):
 
     in_dir = osp.abspath(osp.join(out_dir, "rendered"))
     out_path = osp.abspath(osp.join(out_dir, seq_name + '.mp4'))
-    ffmpeg_cmd = f'ffmpeg -y -f image2 -framerate 25 -pattern_type glob -i "{in_dir}/*.jpg"  -pix_fmt yuv420p -c:v libx264 -x264opts keyint=25:min-keyint=25:scenecut=-1 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {out_path}'
+    ffmpeg_cmd = f'ffmpeg -y -f image2 -framerate 25 -pattern_type glob -i "{in_dir}/*.png"  -pix_fmt yuv420p -c:v libx264 -x264opts keyint=25:min-keyint=25:scenecut=-1 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {out_path}'
     os.system(ffmpeg_cmd)
     # print(ffmpeg_cmd.split())
     # sp.run(ffmpeg_cmd.split())
