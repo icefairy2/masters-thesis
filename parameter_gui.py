@@ -13,6 +13,7 @@ class ParametersWindow(threading.Thread):
     def __init__(self, parameters):
         threading.Thread.__init__(self)
         self.params = np.degrees(np.reshape(parameters, (-1, 3)))
+        self.orig_params = self.params.copy()
         self._callbacks = []
         self.start()
 
@@ -22,6 +23,7 @@ class ParametersWindow(threading.Thread):
 
     def set_params(self, parameters):
         self.params = np.degrees(np.reshape(parameters, (-1, 3)))
+        self.orig_params = self.params.copy()
         for callback in self._callbacks:
             callback()
 
@@ -46,13 +48,16 @@ class ParametersWindow(threading.Thread):
             varZ.set(self.params[JOINT_IDS_DISPLAY[value]][2])
 
         def resetX():
-            varX.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][0])
+            varX.set(self.orig_params[JOINT_IDS_DISPLAY[jointVar.get()]][0])
+            setX(varX.get())
 
         def resetY():
-            varY.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][1])
+            varY.set(self.orig_params[JOINT_IDS_DISPLAY[jointVar.get()]][1])
+            setY(varY.get())
 
         def resetZ():
-            varZ.set(self.params[JOINT_IDS_DISPLAY[jointVar.get()]][2])
+            varZ.set(self.orig_params[JOINT_IDS_DISPLAY[jointVar.get()]][2])
+            setZ(varZ.get())
 
         def setX(value):
             self.params[JOINT_IDS_DISPLAY[jointVar.get()]][0] = value

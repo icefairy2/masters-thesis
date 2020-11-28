@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+import math
 
 import cv2
 import numpy as np
@@ -143,14 +144,7 @@ def __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list):
                         pred_output[hand_type]['pred_vertices_img'] = vert_imgcoord
             # body
             else:
-                # initialize gui to set parameters
-                body_pose = pred_output['pred_body_pose']
-
-                # trackbars for parameter adjustment
-                global paramsWin
-                paramsWin.set_params(body_pose)
-
-                pose_params = torch.from_numpy(body_pose)
+                pose_params = torch.from_numpy(pred_output['pred_body_pose'])
                 betas = torch.from_numpy(pred_output['pred_betas'])
                 if 'pred_right_hand_pose' in pred_output:
                     pred_right_hand_pose = torch.from_numpy(pred_output['pred_right_hand_pose'])
@@ -166,19 +160,89 @@ def __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list):
                 pred_output['pred_vertices_smpl'] = pred_verts
                 pred_output['faces'] = faces
 
-                cam_scale = pred_output['pred_camera'][0]
-                cam_trans = pred_output['pred_camera'][1:]
-                vert_bboxcoord = convert_smpl_to_bbox(
-                    pred_verts, cam_scale, cam_trans, bAppTransFirst=False)  # SMPL space -> bbox space
 
-                bbox_scale_ratio = pred_output['bbox_scale_ratio']
-                bbox_top_left = pred_output['bbox_top_left']
-                vert_imgcoord = convert_bbox_to_oriIm(
-                    vert_bboxcoord, bbox_scale_ratio, bbox_top_left)
-                pred_output['pred_vertices_img'] = vert_imgcoord
+def extract_average_shape(pkl_files):
+    pred_shape = np.empty((0, 10))
+
+    for pkl_file in pkl_files:
+        saved_data = gnu.load_pkl(pkl_file)
+        pred_output_list = saved_data['pred_output_list']
+        assert len(pred_output_list) > 0
+        pred_output = pred_output_list[0]
+        pred_shape = np.mean(np.vstack((pred_shape, pred_output['pred_betas'].reshape(1, -1))), axis=0)
+    return pred_shape.reshape(1, -1)
+
+
+def calculate_body_posture(pred_output_list):
+    pred_output = pred_output_list[0]
+    cam_scale = pred_output['pred_camera'][0]
+    cam_trans = pred_output['pred_camera'][1:]
+    vert_bboxcoord = convert_smpl_to_bbox(pred_output['pred_vertices_smpl'], cam_scale, cam_trans,
+                                          bAppTransFirst=False)  # SMPL space -> bbox space
+    bbox_scale_ratio = pred_output['bbox_scale_ratio']
+    bbox_top_left = pred_output['bbox_top_left']
+    vert_imgcoord = convert_bbox_to_oriIm(vert_bboxcoord, bbox_scale_ratio, bbox_top_left)
+    pred_output['pred_vertices_img'] = vert_imgcoord
+
+
+def fix_body_posture(pred_output_list, cam_scale, cam_trans, bbox_scale_ratio, bbox_top_left):
+    pred_output = pred_output_list[0]
+    vert_bboxcoord = convert_smpl_to_bbox(pred_output['pred_vertices_smpl'], cam_scale, cam_trans,
+                                          bAppTransFirst=False)  # SMPL space -> bbox space
+    vert_imgcoord = convert_bbox_to_oriIm(vert_bboxcoord, bbox_scale_ratio, bbox_top_left)
+    pred_output['pred_vertices_img'] = vert_imgcoord
+
+
+def average_camera(all_pred_output_posture):
+    camera_scales = all_pred_output_posture['pred_camera_scale']
+    camera_transf = all_pred_output_posture['pred_camera_trans']
+    avg_scale = np.mean(camera_scales)
+    avg_transf = np.mean(camera_transf, axis=0)
+    return avg_scale, avg_transf
+
+
+def average_bbox(all_pred_output_posture):
+    bbox_scale = all_pred_output_posture['bbox_scale_ratio']
+    bbox_top_left = all_pred_output_posture['bbox_top_left']
+    avg_scale = np.mean(bbox_scale)
+    avg_top_left = np.mean(bbox_top_left, axis=0)
+    return avg_scale, avg_top_left
+
+
+def extract_general_pose(pkl_files):
+    all_pred_output_posture = {
+        'pred_camera_scale': np.array([]),
+        'pred_camera_trans': np.empty((0, 2)),
+        'bbox_scale_ratio': np.array([]),
+        'bbox_top_left': np.empty((0, 2)),
+    }
+    for pkl_file in pkl_files:
+        saved_data = gnu.load_pkl(pkl_file)
+        pred_output_list = saved_data['pred_output_list']
+        assert len(pred_output_list) > 0
+        pred_output = pred_output_list[0]
+        all_pred_output_posture['pred_camera_scale'] = np.hstack(
+            (all_pred_output_posture['pred_camera_scale'], pred_output['pred_camera'][0]))
+        all_pred_output_posture['pred_camera_trans'] = np.vstack(
+            (all_pred_output_posture['pred_camera_trans'], pred_output['pred_camera'][1:]))
+        all_pred_output_posture['bbox_scale_ratio'] = np.hstack(
+            (all_pred_output_posture['bbox_scale_ratio'], pred_output['bbox_scale_ratio']))
+        all_pred_output_posture['bbox_top_left'] = np.vstack(
+            (all_pred_output_posture['bbox_top_left'], pred_output['bbox_top_left']))
+    avg_camera_scale, avg_camera_trans = average_camera(all_pred_output_posture)
+    avg_bbox_scale, avg_bbox_top_left = average_bbox(all_pred_output_posture)
+    return avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left
 
 
 def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
+    print('Calculating average camera parameters...')
+    avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left = extract_general_pose(pkl_files)
+    print('Average camera parameters done.')
+
+    # print('Calculating average shape parameters...')
+    # pred_shape = extract_average_shape(pkl_files)
+    # print('Average shape parameters done.')
+
     length = len(pkl_files)
     i = 0
     while i < length:
@@ -205,17 +269,21 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         body_bbox_list = saved_data['body_bbox_list']
         pred_output_list = saved_data['pred_output_list']
 
+        global paramsWin
+        body_pose = pred_output_list[0]['pred_body_pose']
+        paramsWin.set_params(body_pose)
+
         __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
+        fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 
         def refresh_mesh():
-            global paramsWin
-            if paramsWin is not None:
-                parameters = paramsWin.get_params()
-                pred_output_list[0]['pred_body_pose'] = parameters
+            parameters = paramsWin.get_params()
+            pred_output_list[0]['pred_body_pose'] = parameters
             __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
-            pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
-            visualizer.update_mesh(pred_mesh_list, img_original_bgr)
+            fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
+            pred_mesh_list_update = demo_utils.extract_mesh_from_output(pred_output_list)
+            visualizer.update_mesh(pred_mesh_list_update, img_original_bgr)
 
         # visualization
         visualizer.visualize(
