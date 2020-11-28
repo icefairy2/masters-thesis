@@ -273,6 +273,8 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         body_pose = pred_output_list[0]['pred_body_pose']
         paramsWin.set_params(body_pose)
 
+        parameters = paramsWin.get_params()
+        pred_output_list[0]['pred_body_pose'] = parameters
         __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
         fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
