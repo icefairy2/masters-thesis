@@ -10,12 +10,14 @@ from constants import JOINT_NAMES_DISPLAY, JOINT_IDS_DISPLAY
 
 class ParametersWindow(threading.Thread):
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, continue_frames, stop_frames):
         threading.Thread.__init__(self)
         self.params = np.degrees(np.reshape(parameters, (-1, 3)), dtype="float32")
         self.orig_params = self.params.copy()
         self.constant_conditions = np.zeros(shape=self.params.shape, dtype="uint8")
         self._callbacks = []
+        self.continue_frames = continue_frames
+        self.stop_frames = stop_frames
         self.start()
 
     def get_params(self):
@@ -56,14 +58,18 @@ class ParametersWindow(threading.Thread):
             var_z.set(self.orig_params[JOINT_IDS_DISPLAY[joint_var.get()]][2])
             set_z(var_z.get())
 
-        def set_x(value):
-            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][0] = value
+        def set_x(a=None, b=None, c=None):
+            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][0] = var_x.get()
 
-        def set_y(value):
-            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][1] = value
+        def set_y(a=None, b=None, c=None):
+            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][1] = var_y.get()
 
-        def set_z(value):
-            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][2] = value
+        def set_z(a=None, b=None, c=None):
+            self.params[JOINT_IDS_DISPLAY[joint_var.get()]][2] = var_z.get()
+
+        var_x.trace('w', set_x)
+        var_y.trace('w', set_y)
+        var_z.trace('w', set_z)
 
         self._callbacks.append(reset_x)
         self._callbacks.append(reset_y)
@@ -110,7 +116,7 @@ class ParametersWindow(threading.Thread):
         frame_x = tk.Frame(self.root)
         frame_x.pack(anchor=tk.W)
 
-        box_x = tk.Spinbox(frame_x, from_=-180, to=180, textvariable=var_x,
+        box_x = tk.Spinbox(frame_x, from_=-180, to=180, textvariable=var_x, command=set_x,
                            font=Font(family='Helvetica', size=16))
         box_x.pack(side=tk.LEFT)
 
@@ -121,8 +127,7 @@ class ParametersWindow(threading.Thread):
                                     command=constant_x)
         checkbox_x.pack(side=tk.LEFT)
 
-        slider_x = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_x, orient=tk.HORIZONTAL,
-                            command=set_x)
+        slider_x = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_x, orient=tk.HORIZONTAL)
         slider_x.pack()
 
         separator1 = ttk.Separator(self.root, orient='horizontal')
@@ -134,7 +139,7 @@ class ParametersWindow(threading.Thread):
         frame_y = tk.Frame(self.root)
         frame_y.pack(anchor=tk.W)
 
-        box_y = tk.Spinbox(frame_y, from_=-180, to=180, textvariable=var_y,
+        box_y = tk.Spinbox(frame_y, from_=-180, to=180, textvariable=var_y, command=set_y,
                            font=Font(family='Helvetica', size=16))
         box_y.pack(side=tk.LEFT)
 
@@ -145,8 +150,7 @@ class ParametersWindow(threading.Thread):
                                     command=constant_y)
         checkbox_y.pack(side=tk.LEFT)
 
-        slider_y = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_y, orient=tk.HORIZONTAL,
-                            command=set_y)
+        slider_y = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_y, orient=tk.HORIZONTAL, )
         slider_y.pack()
 
         separator2 = ttk.Separator(self.root, orient='horizontal')
@@ -158,7 +162,7 @@ class ParametersWindow(threading.Thread):
         frame_z = tk.Frame(self.root)
         frame_z.pack(anchor=tk.W)
 
-        box_z = tk.Spinbox(frame_z, from_=-180, to=180, textvariable=var_z,
+        box_z = tk.Spinbox(frame_z, from_=-180, to=180, textvariable=var_z, command=set_z,
                            font=Font(family='Helvetica', size=16))
         box_z.pack(side=tk.LEFT)
 
@@ -169,8 +173,13 @@ class ParametersWindow(threading.Thread):
                                     command=constant_z)
         checkbox_z.pack(side=tk.LEFT)
 
-        slider_z = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_z, orient=tk.HORIZONTAL,
-                            command=set_z)
+        slider_z = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_z, orient=tk.HORIZONTAL)
         slider_z.pack()
+
+        stop_button = tk.Button(self.root, text="STOP", command=self.stop_frames)
+        stop_button.pack(side=tk.RIGHT)
+
+        continue_button = tk.Button(self.root, text="CONTINUE", command=self.continue_frames)
+        continue_button.pack(side=tk.RIGHT)
 
         self.root.mainloop()

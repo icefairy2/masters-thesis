@@ -16,7 +16,20 @@ from parameter_gui import ParametersWindow
 from renderer.glViewer import backwardsDirection as goBackwards
 from renderer.visualizer import Visualizer
 
-paramsWin = ParametersWindow(np.zeros(72))
+display_time = 100000
+
+
+def continue_frames():
+    global display_time
+    display_time = 1
+
+
+def stop_frames():
+    global display_time
+    display_time = 100000
+
+
+paramsWin = ParametersWindow(np.zeros(72), continue_frames, stop_frames)
 
 
 def __get_data_type(pkl_files):
@@ -243,6 +256,8 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
     # pred_shape = extract_average_shape(pkl_files)
     # print('Average shape parameters done.')
 
+    global display_time
+
     length = len(pkl_files)
     i = 0
     while i < length:
@@ -287,13 +302,18 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
             pred_mesh_list_update = demo_utils.extract_mesh_from_output(pred_output_list)
             visualizer.update_mesh(pred_mesh_list_update, img_original_bgr)
 
+        def continue_frame():
+            return display_time == 1
+
         # visualization
         res_image = visualizer.visualize(
             img_original_bgr,
             pred_mesh_list=pred_mesh_list,
             body_bbox_list=body_bbox_list,
             hand_bbox_list=hand_bbox_list,
-            refresh_mesh=refresh_mesh)
+            refresh_mesh=refresh_mesh,
+            display_time=display_time,
+            continue_frame=continue_frame)
 
         if goBackwards():
             if i > 0:

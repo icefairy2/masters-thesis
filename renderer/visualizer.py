@@ -49,7 +49,9 @@ class Visualizer(object):
                   pred_mesh_list=None,
                   vis_raw_hand_bbox=True,
                   vis_body_pose=True,
-                  refresh_mesh=None
+                  refresh_mesh=None,
+                  display_time=100000,
+                  continue_frame=None
                   ):
         # # init
         res_img = input_img.copy()
@@ -85,12 +87,13 @@ class Visualizer(object):
                 pred_mesh_list_offset.append({'ver': mesh_offset, 'f': mesh['faces']})  # verts = mesh['vertices']
                 # faces = mesh['faces']
             if self.rendererType == "opengl_gui":
-                res_img = self._visualize_gui_naive(pred_mesh_list_offset, img_original=img, refresh_mesh=refresh_mesh)
+                res_img = self._visualize_gui_naive(pred_mesh_list_offset, img_original=img, refresh_mesh=refresh_mesh,
+                                                    display_time=display_time, continue_frame=continue_frame)
 
         return res_img
 
     def _visualize_gui_naive(self, meshList, skelList=None, body_bbox_list=None, img_original=None,
-                             normal_compute=True, refresh_mesh=None):
+                             normal_compute=True, refresh_mesh=None, display_time=100000, continue_frame=None):
         """
             args:
                 meshList: list of {'ver': pred_vertices, 'f': smpl.faces}
@@ -115,7 +118,7 @@ class Visualizer(object):
         # glViewer.setSaveFolderName(overlaidImageFolder)
         glViewer.setNearPlane(50)
         # glViewer.show_SMPL(bSaveToFile = True, bResetSaveImgCnt = False, countImg = False, mode = 'camera')
-        return glViewer.show(100000, refresh_mesh)
+        return glViewer.show(display_time, refresh_mesh, continue_frame)
 
     def update_mesh(self, pred_mesh_list, input_img):
         if pred_mesh_list is not None:

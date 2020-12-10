@@ -1044,7 +1044,7 @@ def init_gl_util():
         # glutReshapeWindow(int(g_Width*0.5), int(g_Height*0.5))     #Just doing resize
 
 
-def init_gl(maxIter=-10, refresh_mesh=None):
+def init_gl(maxIter=-10, refresh_mesh=None, continue_frame=None):
     # Init_Haggling()
     # global width
     # global height
@@ -1061,6 +1061,9 @@ def init_gl(maxIter=-10, refresh_mesh=None):
         glutMainLoopEvent()
         if refresh_mesh is not None:
             refresh_mesh()
+        if continue_frame is not None:
+            if continue_frame():
+                break
         if g_stopMainLoop:
             break
         if maxIter > 0:
@@ -3261,5 +3264,5 @@ def setNearPlane(p):
 
 
 # Aliasing since the "init_gl" is a bit ugly name
-def show(maxIter=-10, refresh_mesh=None):
-    return init_gl(maxIter, refresh_mesh)
+def show(maxIter=-10, refresh_mesh=None, continue_frame=None):
+    return init_gl(maxIter, refresh_mesh, continue_frame)
