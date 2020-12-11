@@ -312,3 +312,24 @@ def gen_video_out(out_dir, seq_name):
     # print(ffmpeg_cmd.split())
     # sp.run(ffmpeg_cmd.split())
     # sp.Popen(ffmpeg_cmd.split(), stdout=sp.PIPE, stderr=sp.PIPE)
+
+
+def save_obj_file(out_dir, file_path, verts, faces, index_attempt=None):
+    attempt_dir = "3d_objects"
+    if index_attempt is not None:
+        attempt_dir += str(index_attempt)
+    out_dir = osp.join(out_dir, attempt_dir)
+    obj_name = osp.basename(file_path)
+    obj_name = obj_name[:-4] + '.obj'
+    res_obj_path = osp.join(out_dir, obj_name)
+
+    if not os.path.exists(os.path.dirname(res_obj_path)):
+        os.makedirs(os.path.dirname(res_obj_path))
+
+    with open(res_obj_path, 'w') as fp:
+        for v in verts:
+            fp.write('v %f %f %f\n' % (v[0], v[1], v[2]))
+        for f in faces + 1:
+            fp.write('f %d %d %d\n' % (f[0], f[1], f[2]))
+
+    print(f"Object saved: {res_obj_path}")
