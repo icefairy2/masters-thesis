@@ -1056,7 +1056,7 @@ def init_gl(maxIter=-10, refresh_mesh=None, continue_frame=None):
     g_stopMainLoop = False
     while True:
         glutPostRedisplay()
-        if bool(glutMainLoopEvent) == False:
+        if not bool(glutMainLoopEvent):
             continue
         glutMainLoopEvent()
         if refresh_mesh is not None:
@@ -1083,6 +1083,7 @@ def init_gl(maxIter=-10, refresh_mesh=None, continue_frame=None):
     g_yTrans = 0.
     g_zTrans = 0.
     glPixelStorei(GL_PACK_ALIGNMENT, 1)
+    renderscene2()
     data = glReadPixels(0, 0, g_Width, g_Height, GL_RGBA, GL_UNSIGNED_BYTE)
     image = Image.frombytes("RGBA", (g_Width, g_Height), data)
     image = ImageOps.flip(image)  # in my case image is flipped top-bottom for some reason
@@ -3256,6 +3257,75 @@ def renderscene():
             g_frameIdx = 0
         else:
             g_frameIdx = 0
+
+
+def renderscene2():
+    global g_xRotate, g_rotateView_counter, g_saveFrameIdx
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    # Some anti-aliasing code (seems not working, though)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_LINE_SMOOTH)
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+    glEnable(GL_MULTISAMPLE)
+
+    # Set up viewing transformation, looking down -Z axis
+    glLoadIdentity()
+    gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0)
+
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(65, float(g_Width) / float(g_Height), g_nearPlane,
+                   g_farPlane)  # This should be called here (not in the reshpe)
+    glMatrixMode(GL_MODELVIEW)
+    # Render the scene
+
+    glTranslatef(0, 0, g_zoom)
+
+    glRotatef(-g_yRotate, 1.0, 0.0, 0.0)
+    glRotatef(-g_xRotate, 0.0, 1.0, 0.0)
+    glRotatef(g_zRotate, 0.0, 0.0, 1.0)
+
+    glTranslatef(g_xTrans, 0.0, 0.0)
+    glTranslatef(0.0, g_yTrans, 0.0)
+    glTranslatef(0.0, 0, g_zTrans)
+
+    glColor3f(0, 1, 0)
+
+    # This should be drawn first, without depth test (it should be always back)
+    if g_bShowBackground:
+        if g_bOrthoCam:
+            DrawBackgroundOrth()
+        else:
+            DrawBackground()
+
+    glEnable(GL_LIGHTING)
+    glEnable(GL_CULL_FACE)
+    glPolygonMode(GL_FRONT, GL_FILL)
+    glPolygonMode(GL_BACK, GL_FILL)
+
+    if g_bShowSkeleton:
+        DrawSkeletons()
+    DrawTrajectory()
+
+    DrawFaces()
+    DrawHands()
+
+    if g_bShowMesh:
+        DrawMeshes()
+    DrawPosOnly()
+
+    glDisable(GL_LIGHTING)
+    glDisable(GL_CULL_FACE)
+
+    DrawCameras()
+    if g_ptCloud is not None:
+        DrawPtCloud()
+
+    if g_bShowFloor:
+        RenderDomeFloor()
 
 
 def setNearPlane(p):

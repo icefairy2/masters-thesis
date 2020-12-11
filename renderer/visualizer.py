@@ -105,7 +105,7 @@ class Visualizer(object):
                 viewer2D.Vis_Bbox(img_original, bbr)
         # viewer2D.ImShow(img_original)
 
-        glViewer.setWindowSize(img_original.shape[1], img_original.shape[0])
+        # glViewer.setWindowSize(img_original.shape[1], img_original.shape[0])
         # glViewer.setRenderOutputSize(inputImg.shape[1],inputImg.shape[0])
         glViewer.setBackgroundTexture(img_original)
         glViewer.SetOrthoCamera(True)

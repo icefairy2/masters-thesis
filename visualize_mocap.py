@@ -182,7 +182,7 @@ def extract_average_shape(pkl_files):
         pred_output_list = saved_data['pred_output_list']
         assert len(pred_output_list) > 0
         pred_output = pred_output_list[0]
-        pred_shape = np.mean(np.vstack((pred_shape, pred_output['pred_betas'].reshape(1, -1))), axis=0)
+        pred_shape = np.mean(np.vstack((pred_shape, pred_output['pred_betas'].reshape(1, -1))), axis=0, dtype="float32")
     return pred_shape.reshape(1, -1)
 
 
@@ -252,9 +252,9 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
     avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left = extract_general_pose(pkl_files)
     print('Average camera parameters done.')
 
-    # print('Calculating average shape parameters...')
-    # pred_shape = extract_average_shape(pkl_files)
-    # print('Average shape parameters done.')
+    print('Calculating average shape parameters...')
+    pred_shape = extract_average_shape(pkl_files)
+    print('Average shape parameters done.')
 
     global display_time
 
@@ -290,6 +290,9 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         parameters = paramsWin.get_params()
         pred_output_list[0]['pred_body_pose'] = parameters
+
+        pred_output_list[0]['pred_betas'] = pred_shape
+
         __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
         fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)

@@ -39,12 +39,17 @@ class ParametersWindow(threading.Thread):
 
         # self.root.bind('<Escape>', stop)
 
+        """""""""""""""""""""""""""""""""""
+               BODY POSE PARAMETERS
+        """""""""""""""""""""""""""""""""""
         joint_var = tk.StringVar(self.root)
         var_x = tk.DoubleVar(self.root)
         var_y = tk.DoubleVar(self.root)
         var_z = tk.DoubleVar(self.root)
 
         joint_var.set(JOINT_NAMES_DISPLAY[0])
+
+        # ************ UTILITIES *****************
 
         def reset_x():
             var_x.set(self.orig_params[JOINT_IDS_DISPLAY[joint_var.get()]][0])
@@ -67,18 +72,6 @@ class ParametersWindow(threading.Thread):
         def set_z(a=None, b=None, c=None):
             self.params[JOINT_IDS_DISPLAY[joint_var.get()]][2] = var_z.get()
 
-        var_x.trace('w', set_x)
-        var_y.trace('w', set_y)
-        var_z.trace('w', set_z)
-
-        self._callbacks.append(reset_x)
-        self._callbacks.append(reset_y)
-        self._callbacks.append(reset_z)
-
-        check_button_x = tk.IntVar()
-        check_button_y = tk.IntVar()
-        check_button_z = tk.IntVar()
-
         def constant_x():
             self.constant_conditions[JOINT_IDS_DISPLAY[joint_var.get()]][0] = check_button_x.get()
 
@@ -96,10 +89,26 @@ class ParametersWindow(threading.Thread):
             check_button_y.set(self.constant_conditions[JOINT_IDS_DISPLAY[joint_var.get()]][1])
             check_button_z.set(self.constant_conditions[JOINT_IDS_DISPLAY[joint_var.get()]][2])
 
+        # ***********************************
+
+        var_x.trace('w', set_x)
+        var_y.trace('w', set_y)
+        var_z.trace('w', set_z)
+
+        self._callbacks.append(reset_x)
+        self._callbacks.append(reset_y)
+        self._callbacks.append(reset_z)
+
+        check_button_x = tk.IntVar()
+        check_button_y = tk.IntVar()
+        check_button_z = tk.IntVar()
+
         set_xyz(joint_var.get())
 
         frame0 = tk.Frame(self.root)
         frame0.pack(anchor=tk.W)
+
+        # ************ JOINTS *********************
 
         text_joint = tk.Label(frame0, text='Joint:', font=Font(family='Helvetica', size=24))
         text_joint.pack(side=tk.LEFT)
@@ -109,6 +118,8 @@ class ParametersWindow(threading.Thread):
 
         separator0 = ttk.Separator(self.root, orient='horizontal')
         separator0.pack(fill=tk.X)
+
+        # ************ X PARAMETER *****************
 
         text_x = tk.Label(self.root, text='X parameter', font=Font(family='Helvetica', size=24))
         text_x.pack(anchor=tk.W)
@@ -133,6 +144,8 @@ class ParametersWindow(threading.Thread):
         separator1 = ttk.Separator(self.root, orient='horizontal')
         separator1.pack(fill=tk.X)
 
+        # ************ Y PARAMETER *****************
+
         text_y = tk.Label(self.root, text='Y parameter', font=Font(family='Helvetica', size=24))
         text_y.pack(anchor=tk.W)
 
@@ -156,6 +169,8 @@ class ParametersWindow(threading.Thread):
         separator2 = ttk.Separator(self.root, orient='horizontal')
         separator2.pack(fill=tk.X)
 
+        # ************ Z PARAMETER *****************
+
         text_z = tk.Label(self.root, text='Z parameter', font=Font(family='Helvetica', size=24))
         text_z.pack(anchor=tk.W)
 
@@ -175,6 +190,9 @@ class ParametersWindow(threading.Thread):
 
         slider_z = tk.Scale(self.root, from_=-180, to=180, length=500, variable=var_z, orient=tk.HORIZONTAL)
         slider_z.pack()
+        """""""""""""""""""""""""""""""""""
+            BODY POSE PARAMETERS END
+        """""""""""""""""""""""""""""""""""
 
         stop_button = tk.Button(self.root, text="STOP", command=self.stop_frames)
         stop_button.pack(side=tk.RIGHT)
