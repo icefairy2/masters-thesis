@@ -1,5 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
-import math
 
 import cv2
 import numpy as np
@@ -8,10 +7,10 @@ import torch
 
 import utils as gnu
 import visualization_utils as demo_utils
-from arguments import DemoOptions
+from arguments import ArgumentOptions
 from conversion_utils import convert_smpl_to_bbox, convert_bbox_to_oriIm
 from hand_module import extract_hand_output
-from models import SMPL, SMPLX
+from models import SMPLX
 from parameter_gui import ParametersWindow
 from renderer.glViewer import backwardsDirection as goBackwards
 from renderer.visualizer import Visualizer
@@ -38,9 +37,8 @@ def __get_data_type(pkl_files):
         return saved_data['demo_type'], saved_data['smpl_type']
 
 
-def __get_smpl_model(demo_type, smpl_type):
+def __get_smpl_model(demo_type):
     smplx_model_path = './extra_data/smpl/SMPLX_NEUTRAL.pkl'
-    smpl_model_path = './extra_data/smpl//basicModel_neutral_lbs_10_207_0_v1.0.0.pkl'
 
     if demo_type == 'hand':
         # use original smpl-x
@@ -54,21 +52,12 @@ def __get_smpl_model(demo_type, smpl_type):
             ext='pkl'
         )
     else:
-        if smpl_type == 'smplx':
-            # use modified smpl-x from body module
-            smpl = SMPLX(
-                smplx_model_path,
-                batch_size=1,
-                num_betas=10,
-                use_pca=False,
-                create_transl=False)
-        else:
-            # use modified smpl from body module
-            assert smpl_type == 'smpl'
-            smpl = SMPL(
-                smpl_model_path,
-                batch_size=1,
-                create_transl=False)
+        smpl = SMPLX(
+            smplx_model_path,
+            batch_size=1,
+            num_betas=10,
+            use_pca=False,
+            create_transl=False)
     return smpl
 
 
@@ -338,7 +327,7 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
 
 def main():
-    args = DemoOptions().parse()
+    args = ArgumentOptions().parse()
 
     # load pkl files
     pkl_files = gnu.get_all_files(args.pkl_dir, ".pkl", "full")
@@ -347,7 +336,7 @@ def main():
     demo_type, smpl_type = __get_data_type(pkl_files)
 
     # get smpl model
-    smpl_model = __get_smpl_model(demo_type, smpl_type)
+    smpl_model = __get_smpl_model(demo_type)
 
     # Set Visualizer
     visualizer = Visualizer('opengl_gui')
