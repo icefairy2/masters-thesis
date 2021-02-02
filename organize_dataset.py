@@ -1,5 +1,5 @@
 import os
-from shutil import copyfile, copy
+from shutil import copy
 
 GESTURE_DATASET_FOLDER = 'gesture_dataset'
 
