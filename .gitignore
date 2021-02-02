@@ -1,6 +1,7 @@
 # Output folders
 mocap_output/
-visualization_out/
+visualization_out*/
+gesture_dataset/
 
 # Data folders
 extra_data/
