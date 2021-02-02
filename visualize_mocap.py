@@ -28,7 +28,7 @@ def stop_frames():
     display_time = 100000
 
 
-paramsWin = ParametersWindow(np.zeros(72), continue_frames, stop_frames)
+paramsWin = ParametersWindow(np.zeros(72), np.zeros(45), np.zeros(45), continue_frames, stop_frames)
 
 
 def __get_data_type(pkl_files):
@@ -256,6 +256,7 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         image_path = saved_data['image_path']
 
+        image_path = image_path.replace('/media/timea/Bonk/', 'E:/')
         image_path = image_path.replace('Project3/frankmocap-master', 'TIMI/frankmocap')
 
         img_original_bgr = cv2.imread(image_path)
@@ -275,10 +276,22 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         global paramsWin
         body_pose = pred_output_list[0]['pred_body_pose']
-        paramsWin.set_params(body_pose)
+        paramsWin.set_body_params(body_pose)
 
-        parameters = paramsWin.get_params()
+        left_hand_pose = pred_output_list[0]['pred_left_hand_pose']
+        paramsWin.set_left_hand_params(left_hand_pose)
+
+        right_hand_pose = pred_output_list[0]['pred_right_hand_pose']
+        paramsWin.set_right_hand_params(right_hand_pose)
+
+        parameters = paramsWin.get_body_params()
         pred_output_list[0]['pred_body_pose'] = parameters
+
+        parameters = paramsWin.get_left_param_params()
+        pred_output_list[0]['pred_left_hand_pose'] = parameters
+
+        parameters = paramsWin.get_right_param_params()
+        pred_output_list[0]['pred_right_hand_pose'] = parameters
 
         pred_output_list[0]['pred_betas'] = pred_shape
 
@@ -287,8 +300,15 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 
         def refresh_mesh():
-            parameters = paramsWin.get_params()
+            parameters = paramsWin.get_body_params()
             pred_output_list[0]['pred_body_pose'] = parameters
+
+            parameters = paramsWin.get_left_param_params()
+            pred_output_list[0]['pred_left_hand_pose'] = parameters
+
+            parameters = paramsWin.get_right_param_params()
+            pred_output_list[0]['pred_right_hand_pose'] = parameters
+
             __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
             fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
             pred_mesh_list_update = demo_utils.extract_mesh_from_output(pred_output_list)

@@ -16,7 +16,7 @@ JOINT_NAMES = [
     'Right Eye', 'Left Ear', 'Right Ear'  # 21,22,23 (Total 24 joints)
 ]
 
-JOINT_NAMES_DISPLAY = [
+BODY_JOINT_NAMES_DISPLAY = [
     'pelvis',  # 0
     'left_hip',  # 1
     'right_hip',  # 2
@@ -41,6 +41,42 @@ JOINT_NAMES_DISPLAY = [
     'right_wrist',  # 21
     'left_hand',  # 22
     'right_hand',  # 23
+]
+
+LEFT_HAND_JOINT_NAMES_DISPLAY = [
+    'left_index1',
+    'left_index2',
+    'left_index3',
+    'left_middle1',
+    'left_middle2',
+    'left_middle3',
+    'left_pinky1',
+    'left_pinky2',
+    'left_pinky3',
+    'left_ring1',
+    'left_ring2',
+    'left_ring3',
+    'left_thumb1',
+    'left_thumb2',
+    'left_thumb3',
+]
+
+RIGHT_HAND_JOINT_NAMES_DISPLAY = [
+    'right_index1',
+    'right_index2',
+    'right_index3',
+    'right_middle1',
+    'right_middle2',
+    'right_middle3',
+    'right_pinky1',
+    'right_pinky2',
+    'right_pinky3',
+    'right_ring1',
+    'right_ring2',
+    'right_ring3',
+    'right_thumb1',
+    'right_thumb2',
+    'right_thumb3',
 ]
 
 JOINTS_TEMP_SMOOTH = {
@@ -72,7 +108,10 @@ JOINTS_TEMP_SMOOTH = {
 
 # Dict containing the joints in numerical order
 JOINT_IDS = {JOINT_NAMES[i]: i for i in range(len(JOINT_NAMES))}
-JOINT_IDS_DISPLAY = {JOINT_NAMES_DISPLAY[i]: i for i in range(len(JOINT_NAMES_DISPLAY))}
+BODY_JOINT_IDS_DISPLAY = {BODY_JOINT_NAMES_DISPLAY[i]: i for i in range(len(BODY_JOINT_NAMES_DISPLAY))}
+LEFT_HAND_JOINT_IDS_DISPLAY = {LEFT_HAND_JOINT_NAMES_DISPLAY[i]: i for i in range(len(LEFT_HAND_JOINT_NAMES_DISPLAY))}
+RIGHT_HAND_JOINT_IDS_DISPLAY = {RIGHT_HAND_JOINT_NAMES_DISPLAY[i]: i for i in
+                                range(len(RIGHT_HAND_JOINT_NAMES_DISPLAY))}
 
 # Map joints to SMPL joints
 JOINT_MAP = {
