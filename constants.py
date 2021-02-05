@@ -17,48 +17,48 @@ JOINT_NAMES = [
 ]
 
 BODY_JOINT_NAMES_DISPLAY = [
-    'pelvis',  # 0
-    'left_hip',  # 1
-    'right_hip',  # 2
-    'spine1',  # 3
-    'left_knee',  # 4
-    'right_knee',  # 5
-    'spine2',  # 6
-    'left_ankle',  # 7
-    'right_ankle',  # 8
-    'spine3',  # 9
-    'left_foot',  # 10
-    'right_foot',  # 11
-    'neck',  # 12
-    'left_collar',  # 13
-    'right_collar',  # 14
-    'head',  # 15
-    'left_shoulder',  # 16
-    'right_shoulder',  # 17
-    'left_elbow',  # 18
-    'right_elbow',  # 19
-    'left_wrist',  # 20
-    'right_wrist',  # 21
-    'left_hand',  # 22
-    'right_hand',  # 23
+    "Global",
+    "L_Hip",
+    "R_Hip",
+    "Spine_01",
+    "L_Knee",
+    "R_Knee",
+    "Spine_02",
+    "L_Ankle",
+    "R_Ankle",
+    "Spine_03",
+    "L_Toe",
+    "R_Toe",
+    "Middle_Shoulder",
+    "L_Clavice",
+    "R_Clavice",
+    "Nose",
+    "L_Shoulder",
+    "R_Shoulder",
+    "L_Elbow",
+    "R_Elbow",
+    "L_Wrist",
+    "R_Wrist",
+    "L_Palm(Invalid for SMPL - X)",
+    "R_Palm(Invalid for SMPL - X)"
 ]
 
 LEFT_HAND_JOINT_NAMES_DISPLAY = [
-    'left_index1',
-    'left_index2',
-    'left_index3',
-    'left_middle1',
-    'left_middle2',
-    'left_middle3',
-    'left_pinky1',
-    'left_pinky2',
-    'left_pinky3',
-    'left_ring1',
-    'left_ring2',
-    'left_ring3',
-    'left_thumb1',
-    'left_thumb2',
-    'left_thumb3',
+    "Index_00",
+    "Index_01",
+    "Index_02",
+    "Middle_00",
+    "Middle_01",
+    "Middle_02",
+    "Little_00",
+    "Little_01",
+    "Little_02",
+    "Ring_00",
+    "Ring_01",
+    "Ring_02",
+    "Thumb_00",
+    "Thumb_01",
+    "Thumb_02"
 ]
 
 RIGHT_HAND_JOINT_NAMES_DISPLAY = [

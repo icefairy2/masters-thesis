@@ -31,33 +31,15 @@ def stop_frames():
 paramsWin = ParametersWindow(np.zeros(72), np.zeros(45), np.zeros(45), continue_frames, stop_frames)
 
 
-def __get_data_type(pkl_files):
-    for pkl_file in pkl_files:
-        saved_data = gnu.load_pkl(pkl_file)
-        return saved_data['demo_type'], saved_data['smpl_type']
-
-
-def __get_smpl_model(demo_type):
+def __get_smpl_model():
     smplx_model_path = './extra_data/smpl/SMPLX_NEUTRAL.pkl'
 
-    if demo_type == 'hand':
-        # use original smpl-x
-        smpl = smplx.create(
-            smplx_model_path,
-            model_type="smplx",
-            batch_size=1,
-            gender='neutral',
-            num_betas=10,
-            use_pca=False,
-            ext='pkl'
-        )
-    else:
-        smpl = SMPLX(
-            smplx_model_path,
-            batch_size=1,
-            num_betas=10,
-            use_pca=False,
-            create_transl=False)
+    smpl = SMPLX(
+        smplx_model_path,
+        batch_size=1,
+        num_betas=10,
+        use_pca=False,
+        create_transl=False)
     return smpl
 
 
@@ -98,69 +80,40 @@ def __calc_hand_mesh(hand_type, pose_params, betas, smplx_model):
     return pred_verts[0], faces
 
 
-def _calc_body_mesh(smpl_type, smpl_model, body_pose, betas,
+def _calc_body_mesh(smpl_model, body_pose, betas,
                     left_hand_pose, right_hand_pose):
-    if smpl_type == 'smpl':
-        smpl_output = smpl_model(
-            global_orient=body_pose[:, :3],
-            body_pose=body_pose[:, 3:],
-            betas=betas,
-        )
-    else:
-        smpl_output = smpl_model(
-            global_orient=body_pose[:, :3],
-            body_pose=body_pose[:, 3:],
-            betas=betas,
-            left_hand_pose=left_hand_pose,
-            right_hand_pose=right_hand_pose,
-        )
+    smpl_output = smpl_model(
+        global_orient=body_pose[:, :3],
+        body_pose=body_pose[:, 3:],
+        betas=betas,
+        left_hand_pose=left_hand_pose,
+        right_hand_pose=right_hand_pose,
+    )
 
     vertices = smpl_output.vertices.detach().cpu().numpy()[0]
     faces = smpl_model.faces
     return vertices, faces
 
 
-def __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list):
+def __calc_mesh(smpl_model, pred_output_list):
     for pred_output in pred_output_list:
         if pred_output is not None:
-            # hand
-            if demo_type == 'hand':
-                assert 'left_hand' in pred_output and 'right_hand' in pred_output
-                for hand_type in pred_output:
-                    hand_pred = pred_output[hand_type]
-                    if hand_pred is not None:
-                        pose_params = torch.from_numpy(hand_pred['pred_hand_pose'])
-                        betas = torch.from_numpy(hand_pred['pred_hand_betas'])
-                        pred_verts, hand_faces = __calc_hand_mesh(hand_type, pose_params, betas, smpl_model)
-                        hand_pred['pred_vertices_smpl'] = pred_verts
 
-                        cam_scale = hand_pred['pred_camera'][0]
-                        cam_trans = hand_pred['pred_camera'][1:]
-                        vert_bboxcoord = convert_smpl_to_bbox(
-                            pred_verts, cam_scale, cam_trans, bAppTransFirst=True)  # SMPL space -> bbox space
-
-                        bbox_scale_ratio = hand_pred['bbox_scale_ratio']
-                        bbox_top_left = hand_pred['bbox_top_left']
-                        vert_imgcoord = convert_bbox_to_oriIm(
-                            vert_bboxcoord, bbox_scale_ratio, bbox_top_left)
-                        pred_output[hand_type]['pred_vertices_img'] = vert_imgcoord
-            # body
+            pose_params = torch.from_numpy(pred_output['pred_body_pose'])
+            betas = torch.from_numpy(pred_output['pred_betas'])
+            if 'pred_right_hand_pose' in pred_output:
+                pred_right_hand_pose = torch.from_numpy(pred_output['pred_right_hand_pose'])
             else:
-                pose_params = torch.from_numpy(pred_output['pred_body_pose'])
-                betas = torch.from_numpy(pred_output['pred_betas'])
-                if 'pred_right_hand_pose' in pred_output:
-                    pred_right_hand_pose = torch.from_numpy(pred_output['pred_right_hand_pose'])
-                else:
-                    pred_right_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
-                if 'pred_left_hand_pose' in pred_output:
-                    pred_left_hand_pose = torch.from_numpy(pred_output['pred_left_hand_pose'])
-                else:
-                    pred_left_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
-                pred_verts, faces = _calc_body_mesh(
-                    smpl_type, smpl_model, pose_params, betas, pred_left_hand_pose, pred_right_hand_pose)
+                pred_right_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
+            if 'pred_left_hand_pose' in pred_output:
+                pred_left_hand_pose = torch.from_numpy(pred_output['pred_left_hand_pose'])
+            else:
+                pred_left_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
+            pred_verts, faces = _calc_body_mesh(smpl_model, pose_params, betas, pred_left_hand_pose,
+                                                pred_right_hand_pose)
 
-                pred_output['pred_vertices_smpl'] = pred_verts
-                pred_output['faces'] = faces
+            pred_output['pred_vertices_smpl'] = pred_verts
+            pred_output['faces'] = faces
 
 
 def extract_average_shape(pkl_files):
@@ -236,7 +189,7 @@ def extract_general_pose(pkl_files):
     return avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left
 
 
-def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
+def visualize_prediction(args, smpl_model, pkl_files, visualizer):
     print('Calculating average camera parameters...')
     avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left = extract_general_pose(pkl_files)
     print('Average camera parameters done.')
@@ -256,7 +209,6 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         image_path = saved_data['image_path']
 
-        image_path = image_path.replace('/media/timea/Bonk/', 'E:/')
         image_path = image_path.replace('Project3/frankmocap-master', 'TIMI/frankmocap')
 
         img_original_bgr = cv2.imread(image_path)
@@ -266,9 +218,6 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
         img_original_bgr = img_original_bgr[:, :1920]
 
         print("--------------------------------------")
-
-        demo_type = saved_data['demo_type']
-        assert saved_data['smpl_type'] == smpl_type
 
         hand_bbox_list = saved_data['hand_bbox_list']
         body_bbox_list = saved_data['body_bbox_list']
@@ -295,7 +244,7 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         pred_output_list[0]['pred_betas'] = pred_shape
 
-        __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
+        __calc_mesh(smpl_model, pred_output_list)
         fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 
@@ -309,7 +258,7 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
             parameters = paramsWin.get_right_param_params()
             pred_output_list[0]['pred_right_hand_pose'] = parameters
 
-            __calc_mesh(demo_type, smpl_type, smpl_model, pred_output_list)
+            __calc_mesh(smpl_model, pred_output_list)
             fix_body_posture(pred_output_list, avg_camera_scale, avg_camera_trans, avg_bbox_scale, avg_bbox_top_left)
             pred_mesh_list_update = demo_utils.extract_mesh_from_output(pred_output_list)
             visualizer.update_mesh(pred_mesh_list_update, img_original_bgr)
@@ -335,9 +284,9 @@ def visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer):
 
         # save predictions to pkl
         if args.save_pred_pkl:
-            args.use_smplx = smpl_type == 'smplx'
+            args.use_smplx = True
             demo_utils.save_pred_to_pkl(
-                args, demo_type, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
+                args, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
 
             # save the obtained video frames
         if args.out_dir is not None:
@@ -352,17 +301,14 @@ def main():
     # load pkl files
     pkl_files = gnu.get_all_files(args.pkl_dir, ".pkl", "full")
 
-    # get smpl type
-    demo_type, smpl_type = __get_data_type(pkl_files)
-
     # get smpl model
-    smpl_model = __get_smpl_model(demo_type)
+    smpl_model = __get_smpl_model()
 
     # Set Visualizer
     visualizer = Visualizer('opengl_gui')
 
     # load smpl model
-    visualize_prediction(args, smpl_type, smpl_model, pkl_files, visualizer)
+    visualize_prediction(args, smpl_model, pkl_files, visualizer)
 
 
 if __name__ == '__main__':

@@ -13,44 +13,24 @@ def extract_mesh_from_output(pred_output_list):
     pred_mesh_list = list()
     for pred_output in pred_output_list:
         if pred_output is not None:
-            if 'left_hand' in pred_output:  # hand mocap
-                for hand_type in pred_output:
-                    if pred_output[hand_type] is not None:
-                        vertices = pred_output[hand_type]['pred_vertices_img']
-                        faces = pred_output[hand_type]['faces'].astype(np.int32)
-                        pred_mesh_list.append(dict(
-                            vertices=vertices,
-                            faces=faces
-                        ))
-            else:  # body mocap (includes frank/whole/total mocap)
-                vertices = pred_output['pred_vertices_img']
-                faces = pred_output['faces'].astype(np.int32)
-                pred_mesh_list.append(dict(
-                    vertices=vertices,
-                    faces=faces
-                ))
+            vertices = pred_output['pred_vertices_img']
+            faces = pred_output['faces'].astype(np.int32)
+            pred_mesh_list.append(dict(
+                vertices=vertices,
+                faces=faces
+            ))
     return pred_mesh_list
 
 
-def save_pred_to_pkl(
-        args, demo_type, image_path,
-        body_bbox_list, hand_bbox_list, pred_output_list):
-    smpl_type = 'smplx' if args.use_smplx else 'smpl'
-    assert demo_type in ['hand', 'body', 'frank']
-    if demo_type in ['hand', 'frank']:
-        assert smpl_type == 'smplx'
-
+def save_pred_to_pkl(args, image_path, body_bbox_list, hand_bbox_list, pred_output_list):
     assert len(hand_bbox_list) == len(body_bbox_list)
     assert len(body_bbox_list) == len(pred_output_list)
 
     # demo type / smpl type / image / bbox
     saved_data = OrderedDict()
-    saved_data['demo_type'] = demo_type
-    saved_data['smpl_type'] = smpl_type
     saved_data['image_path'] = osp.abspath(image_path)
     saved_data['body_bbox_list'] = body_bbox_list
     saved_data['hand_bbox_list'] = hand_bbox_list
-    saved_data['save_mesh'] = args.save_mesh
 
     saved_data['pred_output_list'] = list()
     num_subject = len(hand_bbox_list)
@@ -61,35 +41,11 @@ def save_pred_to_pkl(
             saved_pred_output = None
         else:
             saved_pred_output = dict()
-            if demo_type == 'hand':
-                for hand_type in ['left_hand', 'right_hand']:
-                    pred_hand = pred_output[hand_type]
-                    saved_pred_output[hand_type] = dict()
-                    saved_data_hand = saved_pred_output[hand_type]
-                    if pred_hand is None:
-                        pass
-                    else:
-                        for pred_key in pred_hand:
-                            if pred_key.find("vertices") < 0 or pred_key == 'faces':
-                                saved_data_hand[pred_key] = pred_hand[pred_key]
-                            else:
-                                if args.save_mesh:
-                                    if pred_key != 'faces':
-                                        saved_data_hand[pred_key] = \
-                                            pred_hand[pred_key].astype(np.float16)
-                                    else:
-                                        saved_data_hand[pred_key] = pred_hand[pred_key]
-            else:
-                for pred_key in pred_output:
-                    if pred_key.find("vertices") < 0 or pred_key == 'faces':
-                        saved_pred_output[pred_key] = pred_output[pred_key]
-                    else:
-                        if args.save_mesh:
-                            if pred_key != 'faces':
-                                saved_pred_output[pred_key] = \
-                                    pred_output[pred_key].astype(np.float16)
-                            else:
-                                saved_pred_output[pred_key] = pred_output[pred_key]
+
+            for pred_key in pred_output:
+                if pred_key in ['pred_camera', 'bbox_scale_ratio', 'bbox_top_left', 'pred_betas', 'pred_body_pose',
+                                'pred_right_hand_pose', 'pred_left_hand_pose', 'faces']:
+                    saved_pred_output[pred_key] = pred_output[pred_key]
 
         saved_data['pred_output_list'].append(saved_pred_output)
 
