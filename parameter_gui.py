@@ -52,6 +52,21 @@ class ParametersWindow(threading.Thread):
         new_params = np.degrees(np.reshape(parameters, (-1, 3)), dtype="float32")
         self.params[PARTS_NAMES_DISPLAY[0]] = np.where(self.constant_conditions[PARTS_NAMES_DISPLAY[0]],
                                                        self.params[PARTS_NAMES_DISPLAY[0]], new_params)
+
+        # wrist correction
+        self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]] = np.where(
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]] < 40,
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]], 0)
+        self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]] = np.where(
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]] < 40,
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]], 0)
+        self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]] = np.where(
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]] > -40,
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["L_Wrist"]], 0)
+        self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]] = np.where(
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]] > -40,
+            self.params[PARTS_NAMES_DISPLAY[0]][BODY_JOINT_IDS_DISPLAY["R_Wrist"]], 0)
+
         self.orig_params[PARTS_NAMES_DISPLAY[0]] = self.params[PARTS_NAMES_DISPLAY[0]].copy()
         for callback in self._callbacks:
             callback()

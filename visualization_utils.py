@@ -11,14 +11,13 @@ import utils as gnu
 
 def extract_mesh_from_output(pred_output_list):
     pred_mesh_list = list()
-    for pred_output in pred_output_list:
-        if pred_output is not None:
-            vertices = pred_output['pred_vertices_img']
-            faces = pred_output['faces'].astype(np.int32)
-            pred_mesh_list.append(dict(
-                vertices=vertices,
-                faces=faces
-            ))
+    pred_output = pred_output_list[0]
+    vertices = pred_output['pred_vertices_img']
+    faces = pred_output['faces'].astype(np.int32)
+    pred_mesh_list.append(dict(
+        vertices=vertices,
+        faces=faces
+    ))
     return pred_mesh_list
 
 
@@ -60,7 +59,7 @@ def save_pred_to_pkl(args, image_path, body_bbox_list, hand_bbox_list, pred_outp
 
 
 def save_res_img(out_dir, image_path, res_img):
-    out_dir = osp.join(out_dir, "rendered")
+    out_dir = osp.join(out_dir, "frames")
     img_name = osp.basename(image_path)
     img_name = img_name[:-4] + '.png'
     res_img_path = osp.join(out_dir, img_name)
@@ -74,7 +73,7 @@ def gen_video_out(out_dir, seq_name):
     outVideo_fileName = osp.join(out_dir, seq_name + '.mp4')
     print(f">> Generating video in {outVideo_fileName}")
 
-    in_dir = osp.abspath(osp.join(out_dir, "rendered"))
+    in_dir = osp.abspath(osp.join(out_dir, "frames"))
     out_path = osp.abspath(osp.join(out_dir, seq_name + '.mp4'))
     ffmpeg_cmd = f'ffmpeg -y -f image2 -framerate 25 -pattern_type glob -i "{in_dir}/*.png"  -pix_fmt yuv420p -c:v libx264 -x264opts keyint=25:min-keyint=25:scenecut=-1 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {out_path}'
     os.system(ffmpeg_cmd)
@@ -83,13 +82,11 @@ def gen_video_out(out_dir, seq_name):
     # sp.Popen(ffmpeg_cmd.split(), stdout=sp.PIPE, stderr=sp.PIPE)
 
 
-def save_obj_file(out_dir, file_path, verts, faces, index_attempt=None):
-    attempt_dir = "3d_objects"
-    if index_attempt is not None:
-        attempt_dir += str(index_attempt)
-    out_dir = osp.join(out_dir, attempt_dir)
+def save_obj_file(out_dir, file_path, verts, faces, idx_shape=''):
+    obj_dir = "3d_objects"
+    out_dir = osp.join(out_dir, obj_dir)
     obj_name = osp.basename(file_path)
-    obj_name = obj_name[:-4] + '.obj'
+    obj_name = 'pose' + obj_name[:-4] + 'shape' + str(idx_shape) + '.obj'
     res_obj_path = osp.join(out_dir, obj_name)
 
     if not os.path.exists(os.path.dirname(res_obj_path)):

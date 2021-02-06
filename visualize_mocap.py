@@ -2,7 +2,6 @@
 
 import cv2
 import numpy as np
-import smplx
 import torch
 
 import utils as gnu
@@ -96,24 +95,23 @@ def _calc_body_mesh(smpl_model, body_pose, betas,
 
 
 def __calc_mesh(smpl_model, pred_output_list):
-    for pred_output in pred_output_list:
-        if pred_output is not None:
+    pred_output = pred_output_list[0]
 
-            pose_params = torch.from_numpy(pred_output['pred_body_pose'])
-            betas = torch.from_numpy(pred_output['pred_betas'])
-            if 'pred_right_hand_pose' in pred_output:
-                pred_right_hand_pose = torch.from_numpy(pred_output['pred_right_hand_pose'])
-            else:
-                pred_right_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
-            if 'pred_left_hand_pose' in pred_output:
-                pred_left_hand_pose = torch.from_numpy(pred_output['pred_left_hand_pose'])
-            else:
-                pred_left_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
-            pred_verts, faces = _calc_body_mesh(smpl_model, pose_params, betas, pred_left_hand_pose,
-                                                pred_right_hand_pose)
+    pose_params = torch.from_numpy(pred_output['pred_body_pose'])
+    betas = torch.from_numpy(pred_output['pred_betas'])
+    if 'pred_right_hand_pose' in pred_output:
+        pred_right_hand_pose = torch.from_numpy(pred_output['pred_right_hand_pose'])
+    else:
+        pred_right_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
+    if 'pred_left_hand_pose' in pred_output:
+        pred_left_hand_pose = torch.from_numpy(pred_output['pred_left_hand_pose'])
+    else:
+        pred_left_hand_pose = torch.zeros((1, 45), dtype=torch.float32)
+    pred_verts, faces = _calc_body_mesh(smpl_model, pose_params, betas, pred_left_hand_pose,
+                                        pred_right_hand_pose)
 
-            pred_output['pred_vertices_smpl'] = pred_verts
-            pred_output['faces'] = faces
+    pred_output['pred_vertices_smpl'] = pred_verts
+    pred_output['faces'] = faces
 
 
 def extract_average_shape(pkl_files):
@@ -209,13 +207,14 @@ def visualize_prediction(args, smpl_model, pkl_files, visualizer):
 
         image_path = saved_data['image_path']
 
-        image_path = image_path.replace('Project3/frankmocap-master', 'TIMI/frankmocap')
+        image_path = image_path.replace('frankmocap/mocap_output_gen/frames',
+                                        'masters-thesis/frankmocap_output/rendered')
 
         img_original_bgr = cv2.imread(image_path)
         if img_original_bgr is None:
             print(f"{image_path} does not exists, skip")
 
-        img_original_bgr = img_original_bgr[:, :1920]
+        img_original_bgr = img_original_bgr[:, :1280]
 
         print("--------------------------------------")
 

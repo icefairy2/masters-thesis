@@ -3,6 +3,7 @@ mocap_output/
 visualization_out*/
 gesture_dataset/
 frankmocap_output/
+dataset_gen/
 
 # Data folders
 extra_data/
