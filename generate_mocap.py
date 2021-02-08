@@ -164,7 +164,7 @@ def generate_prediction(args, smpl_model, pkl_files, idx_shape):
 
 
 def main():
-    nr_data = 5000
+    nr_data = 1000
     args = ArgumentOptions().parse()
 
     # load pkl files
