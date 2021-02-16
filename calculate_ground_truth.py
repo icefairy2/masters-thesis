@@ -5,9 +5,11 @@ import re
 import numpy as np
 import open3d as o3d
 
+from constants import DISTANCE_INDEX_TO_HAND_MARK_PAIR, HAND_MARK_TO_VERTEX
+
 POINT_CLOUD = False
 SAVE_POINT_CLOUD = False
-VISUALIZE = True
+VISUALIZE = False
 
 BASE_FOLDER = "base_poses"
 
@@ -18,7 +20,8 @@ OUTPUT_FILE = os.path.join(BASE_FOLDER, "ground_truth.csv")
 
 # the lengths are just identified by their numeric id as in https://link.springer.com/article/10.1007/s12652-020-02354-8
 # 1-63  (range is to 64 because it goes to one less)
-COLUMN_NAMES = ["file_path", "pose_id", "shape_id"] + list(map(str, range(1, 64)))
+COLUMN_NAMES = ["file_path", "pose_id", "shape_id"] + list(map(lambda x: 'L' + str(x), range(1, 64))) + list(
+    map(lambda x: 'R' + str(x), range(1, 64)))
 
 
 def visualize_obj():
@@ -36,9 +39,6 @@ def visualize_obj():
             "shape_id": shape_id
         }
 
-        writer.writerow(metadata)
-
-        mesh.compute_vertex_normals()
         pcd = o3d.geometry.PointCloud()
         pcd.points = mesh.vertices
 
@@ -47,11 +47,33 @@ def visualize_obj():
         # print("Triangles: ")
         # print(np.asarray(mesh.triangles))
 
+        for dist_idx, [distA, distB] in DISTANCE_INDEX_TO_HAND_MARK_PAIR.items():
+            # left hand distance
+            p1 = pcd.points[HAND_MARK_TO_VERTEX[distA][0]]
+            p2 = pcd.points[HAND_MARK_TO_VERTEX[distB][0]]
+            # distL = np.sqrt(np.sum((p1-p2)**2, axis=0))
+            distL = np.linalg.norm(p1 - p2)
+            metadata['L' + str(dist_idx)] = distL
+
+            # right hand distance
+            p1 = pcd.points[HAND_MARK_TO_VERTEX[distA][1]]
+            p2 = pcd.points[HAND_MARK_TO_VERTEX[distB][1]]
+            # distR = np.sqrt(np.sum((p1-p2)**2, axis=0))
+            distR = np.linalg.norm(p1 - p2)
+            metadata['R' + str(dist_idx)] = distR
+
+        for key in COLUMN_NAMES:
+            if key not in metadata:
+                metadata[key] = 0
+
+        writer.writerow(metadata)
+
         if VISUALIZE:
             if POINT_CLOUD:
                 o3d.visualization.draw_geometries_with_editing([pcd],
                                                                window_name='Open3D', width=1280, height=960)
             else:
+                mesh.compute_vertex_normals()
                 o3d.visualization.draw_geometries_with_vertex_selection([mesh],
                                                                         window_name='Open3D', width=1280, height=960)
 
