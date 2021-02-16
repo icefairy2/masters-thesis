@@ -4,6 +4,8 @@ visualization_out*/
 gesture_dataset/
 frankmocap_output/
 dataset_gen/
+artificial_poses/
+base_poses/
 
 # Data folders
 extra_data/

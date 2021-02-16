@@ -285,11 +285,11 @@ def visualize_prediction(args, smpl_model, pkl_files, visualizer):
         if args.save_pred_pkl:
             args.use_smplx = True
             demo_utils.save_pred_to_pkl(
-                args, image_path, body_bbox_list, hand_bbox_list, pred_output_list)
+                args, pkl_file, body_bbox_list, hand_bbox_list, pred_output_list)
 
             # save the obtained video frames
         if args.out_dir is not None:
-            demo_utils.save_res_img(args.out_dir, image_path, res_image)
+            demo_utils.save_res_img(args.out_dir, pkl_file, res_image)
 
     demo_utils.gen_video_out(args.out_dir, 'result_video')
 

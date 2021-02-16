@@ -3,7 +3,7 @@ import os.path as osp
 import random
 from collections import OrderedDict
 from datetime import datetime
-from shutil import copy, copyfile, rmtree
+from shutil import copy, rmtree
 
 import cv2
 import numpy as np
@@ -140,14 +140,6 @@ def generate_prediction(args, smpl_model, pkl_files, idx_shape):
         # load data
         saved_data = gnu.load_pkl(pkl_file)
 
-        image_path = saved_data['image_path']
-
-        image_path = image_path.replace('Project3/frankmocap-master', 'TIMI/frankmocap')
-
-        img_original_bgr = cv2.imread(image_path)
-        if img_original_bgr is None:
-            print(f"{image_path} does not exists, skip")
-
         print("--------------------------------------")
 
         pred_output_list = saved_data['pred_output_list']
@@ -159,12 +151,13 @@ def generate_prediction(args, smpl_model, pkl_files, idx_shape):
         pred_mesh_list = demo_utils.extract_mesh_from_output(pred_output_list)
 
         if args.out_dir is not None:
-            demo_utils.save_obj_file(args.out_dir, image_path, pred_mesh_list[0]['vertices'],
+            demo_utils.save_obj_file(args.out_dir, pkl_file, pred_mesh_list[0]['vertices'],
                                      pred_mesh_list[0]['faces'], idx_shape)
 
 
 def main():
-    nr_data = 1000
+    nr_data_shapes = 3000
+    nr_data_poses = 100
     args = ArgumentOptions().parse()
 
     # load pkl files
@@ -174,25 +167,28 @@ def main():
     smpl_model = __get_smpl_model()
 
     # load smpl model
-    for i in range(0, nr_data):
+    for i in range(0, nr_data_shapes):
         generate_random_shape(args.out_dir, i)
 
-    # select nr_data poses
-    random_list = random.sample(range(0, len(pkl_files) - 1), nr_data)
-    random_list.sort()
-    selected_pkl_files = [pkl_files[i] for i in random_list]
+    # select poses
+    # random_list = random.sample(range(0, len(pkl_files) - 1), nr_data_poses)
+    # random_list.sort()
+    # selected_pkl_files = [pkl_files[i] for i in random_list]
+    selected_pkl_files = pkl_files
 
     # save file in poses folder
     print("Copying selected poses...")
     pose_folder = os.path.join(args.out_dir, 'poses')
-    rmtree(pose_folder)
-    os.mkdir(pose_folder)
+    if os.path.exists(pose_folder) and os.path.isdir(pose_folder):
+        rmtree(pose_folder)
+    os.makedirs(pose_folder, exist_ok=True)
     for pkl_file in selected_pkl_files:
-        copy(pkl_file, os.path.join(pose_folder, os.path.basename(pkl_file)))
+        copy(pkl_file,
+             os.path.join(pose_folder, os.path.basename(pkl_file.replace('_prediction_result_prediction_result', ''))))
     print("Copied selected poses.")
 
     # generate 3d models
-    for i in range(0, nr_data):
+    for i in range(0, nr_data_shapes):
         generate_prediction(args, smpl_model, selected_pkl_files, i)
 
 
