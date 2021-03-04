@@ -6,6 +6,11 @@ frankmocap_output/
 dataset_gen/
 artificial_poses/
 base_poses/
+circumference_software/
+measurements.csv
+measurements.json
+
+venv_comp/
 
 # Data folders
 extra_data/

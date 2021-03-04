@@ -280,3 +280,18 @@ DISTANCE_INDEX_TO_HAND_MARK_PAIR = {
     62: ['index_PM_back', 'index_PM'],
     63: ['wrist_middle_back', 'wrist_middle'],
 }
+
+# Hand measurement distances as defined in https://link.springer.com/article/10.1007/s12652-020-02354-8
+# Labels defined manually using LandMarkPoints software
+CIRCUMFERENCE_MEASUREMENT_LABELS = {
+    'thumb_dm': 52,
+    'index_ip': 53,
+    'index_di': 54,
+    'middle_ip': 55,
+    'middle_di': 56,
+    'ring_ip': 57,
+    'ring_di': 58,
+    'little_ip': 59,
+    'little_di': 60,
+    'wrist': 61,
+}
